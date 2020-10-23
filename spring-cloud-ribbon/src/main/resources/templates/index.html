@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>淦用户管理页面</title>
+    <link rel="stylesheet" href="/js/bootstrap/css/bootstrap-table.min.css">
+    <link rel="stylesheet" href="/js/bootstrap/css/bootstrap.min.css">
+
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/js/bootstrap/js/bootstrap-table.min.js"></script>
+    <script type="text/javascript" src="/js/bootstrap/js/bootstrap-table-zh-CN.min.js"></script>
+</head>
+<body>
+<div class="pull-left">
+    <div class="form-group form-inline">
+        <div class="btn-group">
+            <button type="button" class="btn btn-default" title="新建" data-toggle="modal" data-target="#editModal" ><i class="fa fa-file-o"></i> 新建</button>
+            <button type="button" class="btn btn-default" title="删除" ><i class="fa fa-trash-o"></i> 删除</button>
+            <button type="button" class="btn btn-default" title="刷新" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+        </div>
+    </div>
+</div>
+<div class="box-tools pull-right">
+    <div class="has-feedback">
+        名称：<input  id="name">
+        <button class="btn btn-default" onclick="javascript:cha()">查询</button>
+
+    </div>
+</div>
+
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" >
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h3 id="myModalLabel">品牌编辑</h3>
+            </div>
+            <div class="modal-body">
+                <form method="post" id="ff">
+                    <input type="hidden" name="id" id="bid">
+                    <table class="table table-bordered table-striped"  width="800px">
+                        <tr>
+                            <td>店铺名称</td>
+                            <td><input  class="form-control" placeholder="姓名" name="name" id="qname">  </td>
+                        </tr>
+                        <tr>
+                            <td>服务费</td>
+                            <td><input  class="form-control" placeholder="服务费" name="servicefee" id="servicefee">  </td>
+                        </tr>
+                        <tr>
+                            <td>可发布数量</td>
+                            <td><input  class="form-control" placeholder="数量" name="quantity" id="quantity">  </td>
+                        </tr>
+
+                        <tr>
+                            <td>备注</td>
+                            <td><input  class="form-control" placeholder="备注" name="memo" id="memo">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>顺序</td>
+                            <td><input  class="form-control" placeholder="人名" name="orders" id="orders">  </td>
+                        </tr>
+                        <tr>
+                            <td>设置</td>
+                            <td><input type="radio" name="isallowregister" id="isallowregister"  value="1">是否允许注册</td>
+                        </tr>
+
+
+                    </table>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" data-dismiss="modal" aria-hidden="true" onclick="javascript:add()">保存</button>
+                <button class="btn btn-default" data-dismiss="modal" aria-hidden="true" >关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table" id="myTable"></table>
+</body>
+<script type="text/javascript">
+    $(function(){
+        initTable()
+    })
+    function cha(){
+        $("#myTable").bootstrapTable("refresh",{
+            query:{
+                name:$("#name").val(),
+            }
+        })
+    }
+    function initTable() {
+        $("#myTable").bootstrapTable({
+            url:"/sto/find",
+            columns: [
+                {checkbox: true},
+                {field: 'id', title: 'ID', align: 'center', width: 150},
+                {field: 'name', title: '店铺名称', align: 'center', width: 150},
+                {field: 'servicefee', title: '服务费', align: 'center', width: 150},
+                {field: 'quantity', title: '可发布数量', align: 'center', width: 150},
+                {field: 'memo', title: '备注', align: 'center', width: 150},
+                {field: 'isallowregister', title:'是否允许注册', align: 'center', width: 150,formatter:function(value,rows,index){
+                        var dd="";
+                        if(value==1){
+                            dd+="允许";
+                        }
+                        if(value==0){
+                            dd+="不允许";
+                        }
+                        return dd;
+
+                    }},
+                {field: 'orders', title: '顺序', align: 'center', width: 150},
+                {field: 'tool', title: '操作', align: 'center', width: 150,
+                    formatter:function(value,rows,index){
+                        var str="";
+                        str+="<a href='javascript:deletePatientById("+rows.id+")'>删除&nbsp;&nbsp;</a>";
+                        str+="<button type='button' class='btn bg-olive btn-xs' data-toggle='modal' data-target='#editModal' onclick='javascript:xiugai("+rows.id+")'>修改</button>";
+                        return str;
+                    }
+                },
+            ],
+            pagination:true,
+            pageSize:2,
+            pageList:[2,4,6],
+        });
+    }
+    function deletePatientById(id){
+        $.ajax({
+            url:"/sto/shan",
+            data:{id:id},
+            type:"post",
+            success:function(){
+                $("#myTable").bootstrapTable("refresh");
+            }
+        })
+    }
+    function xiugai(id){
+        $.ajax({
+            url:"/sto/huixian",
+            type:"post",
+            data:{id:id},
+            success:function(data){
+                console.log(data)
+                $("#bid").val(data.id);
+                $("#version").val(data.version);
+                $("#orders").val(data.orders);
+                $("#isallowregister").val(data.isallowregister);
+                $("#quantity").val(data.quantity);
+                $("#qname").val(data.name);
+                $("#servicefee").val(data.servicefee);
+                if(data.isallowregister==1){
+                }
+            }
+
+        })
+    }
+    function add(){
+        $.ajax({
+            url:"/sto/insert",
+            type:"post",
+            data:$("#ff").serialize(),
+            success:function(){
+                alert("成功")
+                $("#myTable").bootstrapTable("refresh");
+            }
+        })
+    }
+</script>
+</html>
